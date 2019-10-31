@@ -2,9 +2,8 @@ import requests, time, re, json
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from email_sender import EmailSender
 
@@ -113,7 +112,9 @@ class EPCBot:
         self.CREDIT_BOOKED = list()
         self.CREDITS = 0
         self.WEBDRIVER.get(self.URL_BOOKED)
-        self.WEBDRIVER.implicitly_wait(5)
+        WebDriverWait(self.WEBDRIVER, 20).until(
+            EC.visibility_of_element_located((By.TAG_NAME, 'tbody'))
+        )
         table = self.WEBDRIVER.find_elements_by_tag_name('tbody')[2]
         items = table.find_elements_by_tag_name('tr')
         for i in range(1, len(items)):
@@ -157,9 +158,12 @@ class EPCBot:
 
     ## 获取可预约的课程列表
     def get_bookable_class(self, urls):
+        self.INFO_BOOKABLE = list()
         for url in urls:
             self.WEBDRIVER.get(url)
-            self.WEBDRIVER.implicitly_wait(10)
+            WebDriverWait(self.WEBDRIVER, 20).until(
+                EC.visibility_of_element_located((By.TAG_NAME, 'tbody'))
+            )
             table = self.WEBDRIVER.find_elements_by_tag_name('tbody')[4]
             items = table.find_elements_by_tag_name('tr')
             for i in range(1, len(items)):
@@ -238,14 +242,16 @@ class EPCBot:
             self.get_bookable_class([self.URL_BOOKABLE[0]])
         else:
             self.get_bookable_class(self.URL_BOOKABLE)
-        self.book_class(self.INFO_BOOKABLE[0])
+        success = self.book_class(self.INFO_BOOKABLE[0])
         self.get_booked_classes()
 
     ## 预约课程 
     def book_class(self, info_bookable):
         type_id = self.TYPE_BOOKABLE.index(info_bookable['type'])
         self.WEBDRIVER.get(self.URL_BOOKABLE[type_id])
-        self.WEBDRIVER.implicitly_wait(10)
+        WebDriverWait(self.WEBDRIVER, 20).until(
+            EC.visibility_of_element_located((By.TAG_NAME, 'tbody'))
+        )
         table = self.WEBDRIVER.find_elements_by_tag_name('tbody')[4]
         items = table.find_elements_by_tag_name('tr')
         for i in range(1, len(items)):
@@ -259,17 +265,26 @@ class EPCBot:
             if unit0 == unit1 and date0 == date1 and time0 == time1:
                 print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()))
                 print('Trying to book \'%s\'...' % unit0)
-                button = items[i].find_elements_by_tag_name('input')[1]
-                button.click()
-                WebDriverWait(self.WEBDRIVER, 10).until(EC.alert_is_present())
-                self.WEBDRIVER.switch_to.alert.accept()
-                print('Done.\n')
+                try:
+                    button = items[i].find_elements_by_tag_name('input')[1]
+                    button.click()
+                    WebDriverWait(self.WEBDRIVER, 10).until(EC.alert_is_present())
+                    self.WEBDRIVER.switch_to.alert.accept()
+                    success = True
+                    print('Done.\n')
+                except:
+                    success = False
+                    print('Failed.\n')
                 break
+        self.get_booked_classes()
+        return success
 
     ## 取消课程
     def cancel_class(self, info_booked):
         self.WEBDRIVER.get(self.URL_BOOKED)
-        self.WEBDRIVER.implicitly_wait(5)
+        WebDriverWait(self.WEBDRIVER, 20).until(
+            EC.visibility_of_element_located((By.TAG_NAME, 'tbody'))
+        )
         table = self.WEBDRIVER.find_elements_by_tag_name('tbody')[2]
         items = table.find_elements_by_tag_name('tr')
         for i in range(1, len(items)):
@@ -283,71 +298,70 @@ class EPCBot:
             if unit0 == unit1 and date0 == date1 and time0 == time1:
                 print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()))
                 print('Trying to cancel \'%s\'...' % unit0)
-                button = items[i].find_elements_by_tag_name('input')[1]
-                button.click()
-                WebDriverWait(self.WEBDRIVER, 10).until(EC.alert_is_present())
-                self.WEBDRIVER.switch_to.alert.accept()
-                print('Done.\n')
+                try:
+                    button = items[i].find_elements_by_tag_name('input')[1]
+                    button.click()
+                    WebDriverWait(self.WEBDRIVER, 10).until(EC.alert_is_present())
+                    self.WEBDRIVER.switch_to.alert.accept()
+                    success = True
+                    print('Done.\n')
+                except:
+                    success = False
+                    print('Failed.\n')
                 break
+        self.get_booked_classes()
+        return success
+
+    ## 优化课程安排
+    def optimize_class(self): 
+        self.get_bookable_class(self.URL_BOOKABLE)
+        if len(self.INFO_BOOKABLE) == 0:
+            return False
+        success = True
+        info = self.INFO_BOOKABLE[0]
+        credit = int(info['credit'])
+        date = time.mktime(
+            time.strptime(info['date'], '%Y/%m/%d')
+        )
+        if self.CREDIT_BOOKED == [1, 1, 1, 1]:
+            if credit == 2:
+                if date < self.DATE_BOOKED[-2]:
+                    success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+                    success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+            else:
+                success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+        elif self.CREDIT_BOOKED == [1, 1, 2]:
+            if credit == 2:
+                success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+            else:
+                if date < self.DATE_BOOKED[-2]:
+                    success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+                    success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+        elif self.CREDIT_BOOKED == [1, 2, 1]:
+            if credit == 2:
+                if date < self.DATE_BOOKED[-2]:
+                    success = self.cancel_class(self.INFO_BOOKED[-2]) and success
+            else:
+                success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+        elif self.CREDIT_BOOKED == [2, 1, 1]:
+            if credit == 2:
+                if date < self.DATE_BOOKED[-2]:
+                    success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+                    success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+            else:
+                success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+        else:
+            if credit == 2:
+                success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+            else:
+                if date < self.DATE_BOOKED[-2]:
+                    success = self.cancel_class(self.INFO_BOOKED[-1]) and success
+        return success
 
     ## 启动EPC-BOT
     def start(self):
         self.login()
         self.get_booked_classes()
-        self.fill_class()
-
         while True:
-            self.get_bookable_class(self.URL_BOOKABLE)
-            if len(self.INFO_BOOKABLE) > 0:
-                info = self.INFO_BOOKABLE[0]
-                credit = int(info['credit'])
-                date = time.mktime(
-                    time.strptime(info['date'], '%Y/%m/%d')
-                )
-                if self.CREDIT_BOOKED == [1, 1, 1, 1]:
-                    if credit == 2:
-                        if date < self.DATE_BOOKED[-2]:
-                            self.cancel_class(self.INFO_BOOKED[-1])
-                            self.cancel_class(self.INFO_BOOKED[-1])
-                            self.book_class(info)
-                    else:
-                        self.cancel_class(self.INFO_BOOKED[-1])
-                        self.book_class(info)
-                elif self.CREDIT_BOOKED == [1, 1, 2]:
-                    if credit == 2:
-                        self.cancel_class(self.INFO_BOOKED[-1])
-                        self.book_class(info)
-                    else:
-                        if date < self.DATE_BOOKED[-2]:
-                            self.cancel_class(self.INFO_BOOKED[-1])
-                            self.cancel_class(self.INFO_BOOKED[-1])
-                            self.book_class(info)
-                elif self.CREDIT_BOOKED == [1, 2, 1]:
-                    if credit == 2:
-                        if date < self.DATE_BOOKED[-2]:
-                            self.cancel_class(self.INFO_BOOKED[-2])
-                            self.book_class(info)
-                    else:
-                        self.cancel_class(self.INFO_BOOKED[-1])
-                        self.book_class(info)
-                elif self.CREDIT_BOOKED == [2, 1, 1]:
-                    if credit == 2:
-                        if date < self.DATE_BOOKED[-2]:
-                            self.cancel_class(self.INFO_BOOKED[-1])
-                            self.cancel_class(self.INFO_BOOKED[-1])
-                            self.book_class(info)
-                    else:
-                        self.cancel_class(self.INFO_BOOKED[-1])
-                        self.book_class(info)
-                else:
-                    if credit == 2:
-                        self.cancel_class(self.INFO_BOOKED[-1])
-                        self.book_class(info)
-                    else:
-                        if date < self.DATE_BOOKED[-2]:
-                            self.cancel_class(self.INFO_BOOKED[-1])
-                            self.book_class(info)
-                            self.fill_class()
-            
-            self.get_booked_classes()
-            time.sleep(60)
+            self.fill_class()
+            self.optimize_class()
