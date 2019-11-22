@@ -1,0 +1,33 @@
+{
+    "sid": "XXXXXXXX",
+    "passwd": "XXXXXXXX",
+    "email_addr": "XXXX@XXXX.com",
+    "email_pwd": "XXXXXXXX",
+    "filter": [
+        {"wday": "Monday",      "time": "08:25-09:15"},
+        {"wday": "Monday",      "time": "09:45-11:25"},
+        {"wday": "Monday",      "time": "14:30-16:10"},
+        {"wday": "Monday",      "time": "16:40-17:30"},
+        {"wday": "Monday",      "time": "19:00-20:40"},
+        {"wday": "Tuesday",     "time": "08:25-09:15"},
+        {"wday": "Tuesday",     "time": "09:45-11:25"},
+        {"wday": "Tuesday",     "time": "14:30-16:10"},
+        {"wday": "Tuesday",     "time": "16:40-17:30"},
+        {"wday": "Tuesday",     "time": "19:00-20:40"},
+        {"wday": "Wednesday",   "time": "08:25-09:15"},
+        {"wday": "Wednesday",   "time": "09:45-11:25"},
+        {"wday": "Wednesday",   "time": "14:30-16:10"},
+        {"wday": "Wednesday",   "time": "16:40-17:30"},
+        {"wday": "Wednesday",   "time": "19:00-20:40"},
+        {"wday": "Thursday",    "time": "08:25-09:15"},
+        {"wday": "Thursday",    "time": "09:45-11:25"},
+        {"wday": "Thursday",    "time": "14:30-16:10"},
+        {"wday": "Thursday",    "time": "16:40-17:30"},
+        {"wday": "Thursday",    "time": "19:00-20:40"},
+        {"wday": "Friday",      "time": "08:25-09:15"},
+        {"wday": "Friday",      "time": "09:45-11:25"},
+        {"wday": "Friday",      "time": "14:30-16:10"},
+        {"wday": "Friday",      "time": "16:40-17:30"},
+        {"wday": "Friday",      "time": "19:00-20:40"}
+    ]
+}
