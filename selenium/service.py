@@ -69,9 +69,7 @@ class Service(object):
         try:
             cmd = [self.path]
             cmd.extend(self.command_line_args())
-            self.process = subprocess.Popen(cmd, env=self.env,
-                                            close_fds=platform.system() != 'Windows',
-                                            stdout=self.log_file, stderr=self.log_file, creationflags=134217728)
+            self.process = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE ,stderr=PIPE, shell=False, creationflags=0x08000000)
         except TypeError:
             raise
         except OSError as err:

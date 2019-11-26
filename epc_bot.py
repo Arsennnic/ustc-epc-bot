@@ -1,4 +1,4 @@
-import requests, time, re, json, threading
+import os, inspect, requests, time, re, json, threading
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -49,9 +49,11 @@ class EPCBot(threading.Thread):
         options.add_argument("--no-sandbox")
         options.add_argument("--headless")
         options.add_argument("--disable-gpu")
-        self.WEBDRIVER = webdriver.Chrome(chrome_options=options, 
-            executable_path="./selenium/chromedriver.exe"
-        )
+        work_dir = os.path.realpath(os.path.abspath(
+            os.path.split(inspect.getfile(inspect.currentframe()))[0]
+        ))
+        driver_dir = os.path.join(work_dir, "selenium", "chromedriver.exe")
+        self.WEBDRIVER = webdriver.Chrome(chrome_options=options, executable_path=driver_dir)
 
     def stop(self):
         self._STOP_FLAG.set()

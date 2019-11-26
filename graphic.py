@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter.scrolledtext import *
 from tkinter.messagebox import showinfo
-import json, threading
+import os, inspect, json, threading, traceback
 from epc_bot import *
 
 class GUI:
@@ -10,6 +10,10 @@ class GUI:
         self.master = master
         self.master.title("EPC-BOT for USTC")
         self.master.protocol('WM_DELETE_WINDOW', self.on_gui_destroy)
+
+        self.work_dir = os.path.realpath(os.path.abspath(
+            os.path.split(inspect.getfile(inspect.currentframe()))[0]
+        ))
 
         self.frame_basic = Frame(master)
         self.frame_basic.grid(row=0, pady=10)
@@ -34,22 +38,27 @@ class GUI:
         self.frame_filter = Frame(master)
         self.frame_filter.grid(row=1, pady=10)
         Label(self.frame_filter, text="--- Filter Settings ---").grid(row=0, columnspan=5)
-        with open("config.template.json", "r", encoding="utf-8") as template_file:
-            self.filters_all = json.load(template_file)["filter"]
-            self.filters_var = list()
-            self.cbtn_filters = list()
-            row, col = 1, 0
-            for i in range(len(self.filters_all)):
-                if (i%5 == 0):
-                    row = row + 1
-                    col = -1
-                col = col + 1
-                filter_str = self.filters_all[i]["wday"][0:3] + ".\t" + self.filters_all[i]["time"]
-                self.filters_var.append(IntVar())
-                cbtn_filter = Checkbutton(self.frame_filter, text=filter_str, variable=self.filters_var[i])
-                cbtn_filter.grid(row=row, column=col, padx=5, pady=2)
-                cbtn_filter.deselect()
-                self.cbtn_filters.append(cbtn_filter)
+        template_dir = os.path.join(self.work_dir, "config.template.json")
+        if os.path.exists(template_dir):
+            with open(template_dir, "r", encoding="utf-8") as template_file:
+                self.filters_all = json.load(template_file)["filter"]
+                self.filters_var = list()
+                self.cbtn_filters = list()
+                row, col = 1, 0
+                for i in range(len(self.filters_all)):
+                    if (i%5 == 0):
+                        row = row + 1
+                        col = -1
+                    col = col + 1
+                    filter_str = self.filters_all[i]["wday"][0:3] + ".\t" + self.filters_all[i]["time"]
+                    self.filters_var.append(IntVar())
+                    cbtn_filter = Checkbutton(self.frame_filter, text=filter_str, variable=self.filters_var[i])
+                    cbtn_filter.grid(row=row, column=col, padx=5, pady=2)
+                    cbtn_filter.deselect()
+                    self.cbtn_filters.append(cbtn_filter)
+        else:
+            showerror(title="Error", message="Configuration template is missing!")
+            self.master.destroy()
 
         self.btn_start = Button(master, text="Start", command=self.start_bot)
         self.btn_start.grid(row=2, ipadx=self.btn_start.winfo_width()*5, pady=10)
@@ -59,7 +68,8 @@ class GUI:
     ## 读取工作目录下存储的配置文件
     def read_config(self):
         try:
-            with open("config.json", "r", encoding="utf-8") as config:
+            config_dir = os.path.join(self.work_dir, "config.json")
+            with open(config_dir, "r", encoding="utf-8") as config:
                 config = json.load(config)
             self.sid = config["sid"]
             self.passwd = config["passwd"]
@@ -105,6 +115,7 @@ class GUI:
             self.write_config()
         else:
             showinfo(title="Alert", message="Please fill the blanks in basic settings module!")
+            return
             
         self.master.resizable(False, False)
         self.frame_basic.grid_forget()
@@ -112,10 +123,16 @@ class GUI:
         self.btn_start.grid_forget()
         self.console = ScrolledText(self.master)
         self.console.pack()
+        self.update_log("Working Directory:\n%s\n" % self.work_dir)
 
-        self.bot = EPCBot(self.sid, self.passwd, self.filters_json, \
-            self.email_addr, self.email_pwd, self)
-        self.bot.start()
+        try:
+            self.bot = EPCBot(self.sid, self.passwd, self.filters_json, \
+                self.email_addr, self.email_pwd, self)
+            self.bot.start()
+            self.update_log("EPC-Bot is running...\n")
+        except Exception as e:
+            self.update_log("Chrome driver is not installed!")
+            self.update_log(traceback.format_exc())
         
     ## 更新EPC-BOT日志到GUI
     def update_log(self, text):
@@ -127,6 +144,8 @@ class GUI:
     ## 关闭GUI时杀死子线程
     def on_gui_destroy(self):
         self.master.destroy()
-        if self.bot:
+        try:
             self.bot.stop()
+        except:
+            pass
         
