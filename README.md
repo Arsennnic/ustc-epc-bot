@@ -26,13 +26,19 @@
 - 步骤2: 解压并双击运行 epc_bot.exe 文件.
 
 - 步骤3: 在设置面板中输入自己的学号, 密码, 邮箱地址及邮箱密码, 勾选可以预约的时段, 并点击 Start 按钮. 相关设置会保存在本地的 config.json 文件中, 此后每次打开都会自动填充上一次的设置.  
-<image src="./instruct/settings_panel.jpg" height="250px"/>
+<p align="center">
+    <img src="./instruct/settings_panel.jpg" height="250px"/>
+</p>
 
 - 步骤4: 自动选课脚本开始运行. 系统会自动获取并优化当前已预约的课程列表.  
-<image src="./instruct/start_running.jpg" height="250px"/>
+<p align="center">
+    <img src="./instruct/start_running.jpg" height="250px"/>
+</p>
 
 - 步骤5: 当有新的课程被预约, 系统将自动发送通知邮件.  
-<image src="./instruct/email_inform.jpg" width="350px"/>
+<p align="center">
+    <img src="./instruct/email_inform.jpg" width="350px"/>
+</p>
 
 
 ### 对于开发者
