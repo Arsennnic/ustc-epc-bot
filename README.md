@@ -115,6 +115,6 @@ $ python main_gui.py
 
 ## 参考文献
 
-[1] 木华生. 中科大EPC课程爬取[OL]. https://blog.csdn.net/qq_28491207/article/details/84261732, 2018.
-[2] David Cortesi, William Caban. PyInstaller Manual[OL]. https://pyinstaller.readthedocs.io/.
+[1] 木华生. 中科大EPC课程爬取[OL]. https://blog.csdn.net/qq_28491207/article/details/84261732, 2018.  
+[2] David Cortesi, William Caban. PyInstaller Manual[OL]. https://pyinstaller.readthedocs.io/.  
 [3] AhmedWas. Getting Rid of ChromeDirver Console Window with PyInstaller[OL]. https://stackoverflow.com/questions/52643556/getting-rid-of-chromedirver-console-window-with-pyinstaller, 2018.
