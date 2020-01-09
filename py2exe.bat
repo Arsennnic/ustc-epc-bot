@@ -3,4 +3,3 @@ pyinstaller --onedir --windowed ^
     --add-data="selenium\chromedriver.exe;selenium" ^
     --name="epc_bot" ^
     main_gui.py
-rd /s /q __pycache__

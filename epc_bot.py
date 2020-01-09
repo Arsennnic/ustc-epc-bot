@@ -52,7 +52,7 @@ class EPCBot(threading.Thread):
         work_dir = os.path.realpath(os.path.abspath(
             os.path.split(inspect.getfile(inspect.currentframe()))[0]
         ))
-        driver_dir = os.path.join(work_dir, "selenium", "chromedriver.exe")
+        driver_dir = os.path.join(work_dir, "lib", "chromedriver.exe")
         self.WEBDRIVER = webdriver.Chrome(chrome_options=options, executable_path=driver_dir)
 
     def stop(self):
