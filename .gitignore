@@ -14,3 +14,6 @@ dist/
 *.manifest
 *.spec
 *.bat
+
+# User config file
+config.json

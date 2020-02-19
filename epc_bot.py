@@ -37,7 +37,7 @@ class EPCBot(threading.Thread):
     CREDITS = 0     # 已预约课程总学时
 
 
-    def __init__(self, sid, passwd, filtr, email_addr, email_pwd, gui=None):
+    def __init__(self, sid, passwd, email_addr, email_pwd, filtr, gui=None):
         super(EPCBot, self).__init__(daemon=True)
         self._STOP_FLAG = threading.Event()
         self.GRAPHIC = gui
