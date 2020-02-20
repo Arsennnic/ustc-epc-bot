@@ -19,31 +19,36 @@ class GUI:
         # 新建master窗口
         self.master = master
         self.master.title("EPC-BOT for USTC")
+        self.master.resizable(False, False)
         self.master.protocol('WM_DELETE_WINDOW', self.on_gui_destroy)
 
-        # 新建frame布局, 用于填写用户的基本信息
-        self.basic_frame = Frame(self.master)
+        # 新建frame布局, 用于设置参数
+        self.settings_frame = Frame(self.master)
+        self.settings_frame.grid(row=0, column=0, padx=20, pady=10)
+
+        # 新建frame子布局, 用于填写用户的基本信息
+        self.basic_frame = Frame(self.settings_frame)
         self.basic_frame.grid(row=0, pady=10)
         Label(self.basic_frame, text="--- Basic Settings ---").grid(row=0, columnspan=4)
         self.ustc_id_label = Label(self.basic_frame, text="USTC Student ID")
         self.ustc_id_label.grid(row=1, column=0, padx=5, pady=2)
-        self.ustc_id_entry = Entry(self.basic_frame)
+        self.ustc_id_entry = Entry(self.basic_frame, width=30)
         self.ustc_id_entry.grid(row=1, column=1, padx=5, pady=2)
         self.ustc_pwd_label = Label(self.basic_frame, text="USTC Password")
-        self.ustc_pwd_label.grid(row=1, column=2, padx=10, pady=2)
-        self.ustc_pwd_entry = Entry(self.basic_frame)
-        self.ustc_pwd_entry.grid(row=1, column=3, padx=5, pady=2)
+        self.ustc_pwd_label.grid(row=2, column=0, padx=10, pady=2)
+        self.ustc_pwd_entry = Entry(self.basic_frame, width=30, show="*")
+        self.ustc_pwd_entry.grid(row=2, column=1, padx=5, pady=2)
         self.email_addr_label = Label(self.basic_frame, text="Email Addrress")
-        self.email_addr_label.grid(row=2, column=0, padx=5, pady=2)
-        self.email_addr_entry = Entry(self.basic_frame)
-        self.email_addr_entry.grid(row=2, column=1, padx=5, pady=2)
+        self.email_addr_label.grid(row=3, column=0, padx=5, pady=2)
+        self.email_addr_entry = Entry(self.basic_frame, width=30)
+        self.email_addr_entry.grid(row=3, column=1, padx=5, pady=2)
         self.email_pwd_label = Label(self.basic_frame, text="Email Password")
-        self.email_pwd_label.grid(row=2, column=2, padx=10, pady=2)
-        self.email_pwd_entry = Entry(self.basic_frame)
-        self.email_pwd_entry.grid(row=2, column=3, padx=5, pady=2)
+        self.email_pwd_label.grid(row=4, column=0, padx=10, pady=2)
+        self.email_pwd_entry = Entry(self.basic_frame, width=30, show="*")
+        self.email_pwd_entry.grid(row=4, column=1, padx=5, pady=2)
 
-        # 新建frame布局, 用于勾选所有允许选课的课程种类
-        self.type_filter_frame = Frame(self.master)
+        # 新建frame子布局, 用于勾选所有允许选课的课程种类
+        self.type_filter_frame = Frame(self.settings_frame)
         self.type_filter_frame.grid(row=1, pady=10)
         Label(self.type_filter_frame, text="--- EPC Type Settings ---") \
             .grid(row=0, columnspan=5)
@@ -51,17 +56,24 @@ class GUI:
         # 遍历配置模板文件中的全部课程种类, 新建同名checkbutton元素
         self.type_filter_checked = list()
         self.type_filter_elements = list()
+        row, col = 1, 0
         for i in range(len(self.type_filter)):
+            # 每行排列三个checkbutton元素, 计算行列坐标
+            if (i%3 == 0):
+                row = row + 1
+                col = -1
+            col = col + 1
+
             # 新建checkbutton元素
             self.type_filter_checked.append(IntVar())
             element_name = self.type_filter[i]["type"]
             element = Checkbutton(self.type_filter_frame, text=element_name, \
                 variable=self.type_filter_checked[i])
-            element.grid(row=1, column=i, padx=5, pady=2)
+            element.grid(row=row, column=col, padx=5, pady=2, sticky=W)
             self.type_filter_elements.append(element)
 
-        # 新建frame布局, 用于勾选所有允许选课的时间段
-        self.wday_filter_frame = Frame(self.master)
+        # 新建frame子布局, 用于勾选所有允许选课的时间段
+        self.wday_filter_frame = Frame(self.settings_frame)
         self.wday_filter_frame.grid(row=2, pady=10)
         Label(self.wday_filter_frame, text="--- Time Settings ---") \
             .grid(row=0, columnspan=5)
@@ -71,8 +83,8 @@ class GUI:
         self.wday_filter_elements = list()
         row, col = 1, 0
         for i in range(len(self.wday_filter)):
-            # 每行排列五个checkbutton元素, 计算行列坐标
-            if (i%5 == 0):
+            # 每行排列三个checkbutton元素, 计算行列坐标
+            if (i%3 == 0):
                 row = row + 1
                 col = -1
             col = col + 1
@@ -86,10 +98,24 @@ class GUI:
             element.grid(row=row, column=col, padx=5, pady=2)
             self.wday_filter_elements.append(element)
             
-        
-        # 新建button元素, 用于开启bot
-        self.start_button = Button(self.master, text="Start", command=self.start_bot)
-        self.start_button.grid(row=3, ipadx=self.start_button.winfo_width()*5, pady=10)
+        # 新建frame子布局, 用于放置button元素
+        self.buttons_frame = Frame(self.settings_frame)
+        self.buttons_frame.grid(row=3, pady=10)
+
+        # 新建button元素, 用于开启或停止bot
+        self.start_button = Button(self.buttons_frame, text="Start", \
+            width=10, command=self.start_bot)
+        self.start_button.grid(row=0, column=0, padx=10)
+        self.stop_button = Button(self.buttons_frame, text="Stop", \
+            width=10, command=self.stop_bot)
+        self.stop_button.grid(row=0, column=1, padx=10)
+
+        # 新建scrolledtext元素, 用于输出日志
+        self.console = ScrolledText(self.master, width=60, padx=20, pady=10)
+        self.console.grid(row=0, column=1, sticky=S+N)
+        self.print_log("EPC-BOT v1.1")
+        self.print_log("Developer: @Arsennnic")
+        self.print_log("Working Directory: %s \n" % self.work_dir)
 
         # 应用配置文件中的设置
         self.apply_config()
@@ -113,7 +139,7 @@ class GUI:
 
 
     # ================================================================
-    # 读取工作目录下存储的配置文件
+    # 应用配置文件中的设置
     # ================================================================
     def apply_config(self):
         self.ustc_id_entry.insert(0, self.ustc_id)
@@ -148,10 +174,9 @@ class GUI:
     
 
     # ================================================================
-    # 启动EPC-BOT
+    # 从设置面板中获取最新的设置
     # ================================================================
-    def start_bot(self):
-        # 获取最新设置
+    def sync_config(self):
         self.ustc_id = self.ustc_id_entry.get()
         self.ustc_pwd = self.ustc_pwd_entry.get()
         self.email_addr = self.email_addr_entry.get()
@@ -161,7 +186,15 @@ class GUI:
         for i in range(len(self.wday_filter_elements)):
             self.wday_filter[i]["enable"] = bool(self.wday_filter_checked[i].get())
         
-        # 如果基本设置不为空, 则写入配置文件
+
+    # ================================================================
+    # 启动EPC-BOT
+    # ================================================================
+    def start_bot(self):
+        # 获取设置面板中最新配置信息, 储存到变量
+        self.sync_config()
+        
+        # 若基本信息的输入框非空, 则写入配置文件
         if (len(self.ustc_id) and len(self.ustc_pwd) \
             and len(self.email_addr) and len(self.email_pwd)):
             self.write_config()
@@ -169,31 +202,29 @@ class GUI:
             showinfo(title="Alert", \
                 message="Please fill the blanks in basic settings module!")
             return
-            
-        self.master.resizable(False, False)
-        self.basic_frame.grid_forget()
-        self.type_filter_frame.grid_forget()
-        self.wday_filter_frame.grid_forget()
-        self.start_button.grid_forget()
-        self.console = ScrolledText(self.master)
-        self.console.pack()
-        self.update_log("Working Directory:\n%s\n" % self.work_dir)
-
+        
         # 启动bot
         try:
             self.bot = EPCBot(self.ustc_id, self.ustc_pwd, self.email_addr, \
                 self.email_pwd, self.wday_filter, self)
             self.bot.start()
-            self.update_log("EPC-Bot is running...\n")
+            self.print_log("EPC-Bot is running...\n")
         except Exception as e:
-            self.update_log("Chrome driver is not installed!")
-            self.update_log(traceback.format_exc())
-        
+            self.print_log("Chrome driver is not installed!")
+            self.print_log(traceback.format_exc())
+
+
+    # ================================================================
+    # 停止EPC-BOT
+    # ================================================================
+    def stop_bot(self):
+        self.bot.stop()    
+    
     
     # ================================================================
     # 更新EPC-BOT日志到GUI
     # ================================================================
-    def update_log(self, text):
+    def print_log(self, text):
         self.console.configure(state="normal")
         self.console.insert(END, text + "\n")
         self.console.configure(state="disabled")

@@ -1,4 +1,7 @@
-import os, inspect, requests, time, re, json, threading
+import os, inspect, time, re
+import requests
+import json
+import threading
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -345,7 +348,7 @@ class EPCBot(threading.Thread):
     def log(self, text):
         print(text)
         if (self.GRAPHIC):
-            self.GRAPHIC.update_log(text)
+            self.GRAPHIC.print_log(text)
 
     ## 启动EPC-BOT
     def run(self):
