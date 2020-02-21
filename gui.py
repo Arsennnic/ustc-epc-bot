@@ -9,6 +9,9 @@ from bot import *
 
 class GUI:
 
+    # EPC-BOT对象
+    bot = None
+
     def __init__(self, master):
         # 设置工作目录, 读取配置文件
         self.work_dir = os.path.realpath(os.path.abspath(
@@ -205,8 +208,6 @@ class GUI:
         # 启动bot
         self.bot = EPCBot(config, ui=self)
         self.bot.start()
-        self.print_log("EPC-Bot is running...")
-        self.print_log("")
 
 
     # ================================================================
@@ -214,8 +215,6 @@ class GUI:
     # ================================================================
     def stop_bot(self):
         self.bot.stop()
-        self.print_log("EPC-Bot is stopped.")
-        self.print_log("")
     
     
     # ================================================================
@@ -232,6 +231,6 @@ class GUI:
     # 关闭GUI时杀死子线程
     # ================================================================
     def on_gui_destroy(self):
-        self.stop_bot()
+        if self.bot != None: self.stop_bot()
         self.master.destroy()
         

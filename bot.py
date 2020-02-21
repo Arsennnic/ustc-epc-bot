@@ -54,8 +54,8 @@ class EPCBot(threading.Thread):
         # 初始化邮件通知类
         self.email_sender = EmailSender(self.email_addr, self.email_pwd)
 
-        # TODO:初始化桌面通知类
-        pass
+        # 初始化桌面通知类
+        self.desktop_toaster = DesktopToaster()
 
         # 开启session会话
         self.session = requests.Session()
@@ -293,6 +293,9 @@ class EPCBot(threading.Thread):
     # 启动EPC-BOT
     # ================================================================
     def run(self):
+        self.print_log("EPC-Bot is running...")
+        self.print_log("")
+
         # 登录
         self.is_stopped.clear()
         self.login()
@@ -305,6 +308,9 @@ class EPCBot(threading.Thread):
         self.print_log("Booked classes:")
         self.print_log(booked_epc_new)
         self.print_log("")
+
+        self.desktop_toaster = DesktopToaster()
+        self.desktop_toaster.show("test", "hello world")
 
         # 循环获取可预约的EPC课程列表
         bookable_epc_old = None
@@ -323,6 +329,9 @@ class EPCBot(threading.Thread):
 
             # 延迟, 加入最大为1s的随机浮动
             time.sleep(self.refresh + random.random())
+
+        self.print_log("EPC-Bot is stopped.")
+        self.print_log("")
 
 
     # ================================================================

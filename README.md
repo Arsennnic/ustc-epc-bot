@@ -27,18 +27,21 @@
 ### 针对普通用户
 
 - 步骤1: 在 [Release](https://github.com/Arsennnic/ustc-epc-bot/releases) 页面下载最新版本.
-- 步骤2: 解压并双击运行 epc_bot.exe 文件.
-- 步骤3: 在设置面板中输入自己的学号, 密码, 邮箱地址及邮箱密码, 勾选允许预约的EPC类型及时段, 并点击 Start 按钮. 相关设置会保存在本地的 config.json 文件中, 此后每次打开都会自动填充上一次的设置. 
+- 步骤2: 解压并双击运行 `epc_bot.exe` 文件.
+- 步骤3: 在设置面板中输入自己的学号, 密码, 邮箱地址及邮箱密码, 勾选允许预约的课程类型及时段, 并点击 Start 按钮. 相关设置会保存在本地的 `config.json` 文件中, 此后每次打开都会自动填充上一次的设置. 
 - 步骤4: 当有新的课程被预约, 系统将自动发送通知.
 
 ### 针对开发者
 
-- 步骤0: 安装 Python 3.X 开发环境及相关依赖包.
 - 步骤1: 将项目 Clone 至本地.
 ```
 $ git clone https://github.com/Arsennnic/ustc-epc-bot.git
 ```
-- 步骤2: 运行 main.py 文件.
+- 步骤2: 安装相关依赖包.
+```
+$ pip install -r requirements.txt
+```
+- 步骤3: 运行 `main.py` 文件.
 ```
 $ cd ustc-epc-bot/
 $ python main.py

@@ -3,29 +3,35 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.header import Header
+from win10toast import ToastNotifier
 
 
 class EmailSender:
-    SUBJECT = "EPC-Bot Report"
-    SMTP = None
-    USERNAME = None
-    PASSWORD = None
 
-    def __init__(self, username, password):
-        self.SMTP = username.split("@")[1]
-        self.USERNAME = username
-        self.PASSWORD = password
+    def __init__(self, addr, pwd):
+        self.smtp = addr.split("@")[1]
+        self.addr = addr
+        self.pwd = pwd
 
-    def send(self, text):
+    def send(self, subject, content):
         msg = MIMEMultipart("mixed")
-        msg["Subject"] = self.SUBJECT
-        msg["From"] = self.USERNAME
-        msg["To"] = self.USERNAME
-        text = MIMEText(text, "html", "utf-8")
+        msg["Subject"] = self.subject
+        msg["From"]    = self.addr
+        msg["To"]      = self.addr
+        text = MIMEText(content, "html", "utf-8")
         msg.attach(text)
-        smtp = smtplib.SMTP()
-        smtp.connect(self.SMTP)
-        smtp.login(self.USERNAME, self.PASSWORD)
-        smtp.sendmail(self.USERNAME, self.USERNAME, msg.as_string())
+        smtp = smtplib.smtp()
+        smtp.connect(self.smtp)
+        smtp.login(self.addr, self.pwd)
+        smtp.sendmail(self.addr, self.addr, msg.as_string())
         smtp.quit()
-    
+
+
+class DesktopToaster:
+
+    def __init__(self):
+        self.toaster = ToastNotifier()
+
+    def show(self, subject, content):
+        self.toaster.show_toast(subject, content, duration=None, \
+            icon_path="logo.ico", threaded=True)
