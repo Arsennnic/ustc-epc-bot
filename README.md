@@ -1,20 +1,22 @@
 # 中国科学技术大学EPC系统自动抢课脚本
 
+![System](https://img.shields.io/badge/System-Windows%2010-brightgreen.svg)
 ![Compiler](https://img.shields.io/badge/Build-Python%203.6-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-GPL,%20v3.0-blue.svg)
 
-版本 v1.0 更新日志(2019_11_26):
+版本 v1.1 更新日志(2020_02_21):
 - 支持自动选课, 根据**选课逻辑算法**自动优化课表.
-- 支持选课时段的自定义设置.
-- 支持邮件提醒, 课表更新时系统自动发送.
-- 提供图形化操作界面.
+- 支持**选课时段**和**EPC课程类型**的自定义筛选.
+- 支持**邮件提醒**, 课表更新时系统自动通知.
+- 支持 Windows 10 系统的**桌面提醒**, 课表更新时系统自动通知.
+- 提供**图形化操作界面**.
+- 实现原理从 Selenium 方式转为 Requests 方式, 性能提升.
 
 ## 目录
 
 - [安装及使用](#安装及使用)
     + [针对普通用户](#针对普通用户)
     + [针对开发者](#针对开发者)
-- [实现原理](#实现原理)
 - [选课逻辑算法](#选课逻辑算法)
     + [未达预约上限的情况](#未达预约上限的情况)
     + [已达预约上限的情况](#已达预约上限的情况)
@@ -24,48 +26,23 @@
 
 ### 针对普通用户
 
-- 步骤0: 确认自己的电脑已安装 Chrome 浏览器.
 - 步骤1: 在 [Release](https://github.com/Arsennnic/ustc-epc-bot/releases) 页面下载最新版本.
 - 步骤2: 解压并双击运行 epc_bot.exe 文件.
-- 步骤3: 在设置面板中输入自己的学号, 密码, 邮箱地址及邮箱密码, 勾选可以预约的时段, 并点击 Start 按钮. 相关设置会保存在本地的 config.json 文件中, 此后每次打开都会自动填充上一次的设置.  
-
-<p align="center">
-    <img src="./doc/settings_panel.jpg" height="250px"/>
-</p>
-
-- 步骤4: 自动选课脚本开始运行. 系统会自动获取并优化当前已预约的课程列表.  
-
-<p align="center">
-    <img src="./doc/start_running.jpg" height="250px"/>
-</p>
-
-- 步骤5: 当有新的课程被预约, 系统将自动发送通知邮件.  
-
-<p align="center">
-    <img src="./doc/email_inform.jpg" width="350px"/>
-</p>
+- 步骤3: 在设置面板中输入自己的学号, 密码, 邮箱地址及邮箱密码, 勾选允许预约的EPC类型及时段, 并点击 Start 按钮. 相关设置会保存在本地的 config.json 文件中, 此后每次打开都会自动填充上一次的设置. 
+- 步骤4: 当有新的课程被预约, 系统将自动发送通知.
 
 ### 针对开发者
 
-- 步骤0: 确认自己的电脑已安装 Chrome 浏览器和 Python 3.x 开发环境.
+- 步骤0: 安装 Python 3.X 开发环境及相关依赖包.
 - 步骤1: 将项目 Clone 至本地.
 ```
 $ git clone https://github.com/Arsennnic/ustc-epc-bot.git
 ```
-
-- 步骤2: 运行 main_gui.py 文件.
+- 步骤2: 运行 main.py 文件.
 ```
 $ cd ustc-epc-bot/
-$ python main_gui.py
+$ python main.py
 ```
-
-
-## 实现原理
-
-- 利用 requests.Session() 抓取 Cookie 信息, 绕过验证码检测.
-- 将 Cookie 信息传入后台开启的 Chrome Headless 浏览器模拟登录, 抓取已预约课程列表, 并循环刷新可预约课程列表.
-- 通过 selenium.*element*.click() 模拟按钮点击等操作, 优化已预约课程列表.
-- 通过 smtp.sendmail() 发送邮件.
 
 ## 选课逻辑算法
 

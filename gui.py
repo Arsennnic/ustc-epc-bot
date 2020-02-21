@@ -103,10 +103,10 @@ class GUI:
         self.buttons_frame.grid(row=3, pady=10)
 
         # 新建button元素, 用于启动或停止bot
-        self.start_button = Button(self.buttons_frame, text="Start", \
+        self.start_button = Button(self.buttons_frame, text="Start", 
             width=10, command=self.start_bot)
         self.start_button.grid(row=0, column=0, padx=10)
-        self.stop_button  = Button(self.buttons_frame, text="Stop", \
+        self.stop_button  = Button(self.buttons_frame, text="Stop", 
             width=10, command=self.stop_bot)
         self.stop_button.grid(row=0, column=1, padx=10)
 
@@ -115,6 +115,7 @@ class GUI:
         self.console.grid(row=0, column=1, sticky=S+N)
         self.print_log("EPC-BOT v1.1")
         self.print_log("Developer: @Arsennnic")
+        self.print_log("")
 
         # 应用配置文件中的设置
         self.apply_config()
@@ -202,16 +203,19 @@ class GUI:
         config = self.write_config()
         
         # 启动bot
-        self.bot = EPCBot(config)
+        self.bot = EPCBot(config, ui=self)
         self.bot.start()
-        self.print_log("EPC-Bot is running...\n")
+        self.print_log("EPC-Bot is running...")
+        self.print_log("")
 
 
     # ================================================================
     # 停止EPC-BOT
     # ================================================================
     def stop_bot(self):
-        self.bot.stop()    
+        self.bot.stop()
+        self.print_log("EPC-Bot is stopped.")
+        self.print_log("")
     
     
     # ================================================================
@@ -228,9 +232,6 @@ class GUI:
     # 关闭GUI时杀死子线程
     # ================================================================
     def on_gui_destroy(self):
+        self.stop_bot()
         self.master.destroy()
-        try:
-            self.bot.stop()
-        except:
-            pass
         
