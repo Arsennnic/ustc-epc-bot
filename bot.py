@@ -309,8 +309,7 @@ class EPCBot(threading.Thread):
         self.print_log(booked_epc_new)
         self.print_log("")
 
-        self.desktop_toaster = DesktopToaster()
-        self.desktop_toaster.show("test", "hello world")
+        self.desktop_toaster.toast("test", "hello world")
 
         # 循环获取可预约的EPC课程列表
         bookable_epc_old = None

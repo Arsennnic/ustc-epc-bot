@@ -1,3 +1,4 @@
+import winsound
 import smtplib, email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -27,11 +28,13 @@ class EmailSender:
         smtp.quit()
 
 
-class DesktopToaster:
+class DesktopToaster(ToastNotifier):
 
-    def __init__(self):
-        self.toaster = ToastNotifier()
+    def on_destroy(self, hwnd, msg, wparam, lparam):
+        pass
 
-    def show(self, subject, content):
-        self.toaster.show_toast(subject, content, duration=None, \
+    def toast(self, subject, content):
+        self.show_toast(subject, content, \
             icon_path="logo.ico", threaded=True)
+        winsound.PlaySound('./chirp.wav', \
+            winsound.SND_FILENAME | winsound.SND_ASYNC)

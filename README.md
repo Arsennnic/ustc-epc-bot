@@ -33,17 +33,17 @@
 
 ### 针对开发者
 
-- 步骤1: 将项目 Clone 至本地.
+- 步骤1: 将项目克隆至本地.
 ```
 $ git clone https://github.com/Arsennnic/ustc-epc-bot.git
 ```
 - 步骤2: 安装相关依赖包.
 ```
+$ cd ustc-epc-bot/
 $ pip install -r requirements.txt
 ```
 - 步骤3: 运行 `main.py` 文件.
 ```
-$ cd ustc-epc-bot/
 $ python main.py
 ```
 
