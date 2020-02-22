@@ -1,7 +1,7 @@
 import os, inspect
 import time, random
 import requests
-import json, re
+import json
 import threading
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -27,6 +27,9 @@ class EPCBot(threading.Thread):
         {"type": "Pronunciation Practice", "url": URL_ROOT + "m_practice.asp?second_id=2007"}
     ]
     
+    # 允许预约课程总学时上限
+    booked_hours_max = 4
+
     # 已预约课程总学时
     booked_hours = 0
 
@@ -175,62 +178,63 @@ class EPCBot(threading.Thread):
 
 
     # ================================================================
-    # 根据课程时间和学时排序
+    # 根据上课时间和学时排序: 上课时间从小到大, 学时从大到小
     # ================================================================ 
-    # def sort_info(self, lst):
-    #     return sorted(lst, key=lambda item: (
-    #         time.mktime(time.strptime(item["date"], "%Y/%m/%d")),
-    #         -int(item["credit"])
-    #     ))
+    def sort_epc(self, epc_list:list):
+        return sorted(epc_list, key=lambda epc: (
+            int(epc["time"]), -int(epc["hour"])
+        ))
 
 
     # ================================================================
-    # 优化课程安排
+    # 求两个dict数组的并集
     # ================================================================ 
-    # def optimize_class(self): 
-    #     self.get_bookable_epc(self.URL_BOOKABLE)
-    #     if len(self.INFO_BOOKABLE) == 0:
-    #         return False
-    #     success = True
-    #     info = self.INFO_BOOKABLE[0]
-    #     credit = int(info["credit"])
-    #     date = time.mktime(
-    #         time.strptime(info["date"], "%Y/%m/%d")
-    #     )
-    #     if self.CREDIT_BOOKED == [1, 1, 1, 1]:
-    #         if credit == 2:
-    #             if date < self.DATE_BOOKED[-2]:
-    #                 success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #                 success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #         else:
-    #             success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #     elif self.CREDIT_BOOKED == [1, 1, 2]:
-    #         if credit == 2:
-    #             success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #         else:
-    #             if date < self.DATE_BOOKED[-2]:
-    #                 success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #                 success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #     elif self.CREDIT_BOOKED == [1, 2, 1]:
-    #         if credit == 2:
-    #             if date < self.DATE_BOOKED[-2]:
-    #                 success = self.cancel_class(self.INFO_BOOKED[-2]) and success
-    #         else:
-    #             success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #     elif self.CREDIT_BOOKED == [2, 1, 1]:
-    #         if credit == 2:
-    #             if date < self.DATE_BOOKED[-2]:
-    #                 success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #                 success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #         else:
-    #             success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #     else:
-    #         if credit == 2:
-    #             success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #         else:
-    #             if date < self.DATE_BOOKED[-2]:
-    #                 success = self.cancel_class(self.INFO_BOOKED[-1]) and success
-    #     return success
+    def union_epc(self, epc_list_1:list, epc_list_2:list):
+        epc_set_1 = set([str(epc) for epc in epc_list_1])
+        epc_set_2 = set([str(epc) for epc in epc_list_2])
+        return [eval(epc) for epc in list(epc_set_1 | epc_set_2)]
+
+
+    # ================================================================
+    # 求两个dict数组的交集
+    # ================================================================ 
+    def intersect_epc(self, epc_list_1:list, epc_list_2:list):
+        epc_set_1 = set([str(epc) for epc in epc_list_1])
+        epc_set_2 = set([str(epc) for epc in epc_list_2])
+        return [eval(epc) for epc in list(epc_set_1 & epc_set_2)]
+
+
+    # ================================================================
+    # 求两个dict数组的差集
+    # ================================================================ 
+    def differ_epc(self, epc_list_1:list, epc_list_2:list):
+        epc_set_1 = set([str(epc) for epc in epc_list_1])
+        epc_set_2 = set([str(epc) for epc in epc_list_2])
+        return [eval(epc) for epc in list(epc_set_1 - epc_set_2)]
+
+
+    # ================================================================
+    # 优化课程安排: 当sum{hour}<=hours_max时, 使max{time}趋于最小 
+    # ================================================================ 
+    def optimize_epc(self, booked_epc:list, bookable_epc:list): 
+        # 取已预约课程和可预约课程列表的并集, 并根据上课时间和学时排序
+        all_epc = self.sort_epc(self.union_epc(booked_epc, bookable_epc))
+
+        # 循环检查sum{hour}<=hours_max的边界条件, 将课程填入空数组
+        hours = 0
+        optimal_epc = list()
+        for epc in all_epc:
+            if hours >= self.booked_hours_max: break
+            hours_tmp = hours + epc["hour"]
+            if hours_tmp > self.booked_hours_max: continue
+            hours = hours_tmp
+            optimal_epc.append(epc)
+            
+        # 确定应该保留/预约/取消预约的课程列表
+        reserved_epc  = self.intersect_epc(optimal_epc, booked_epc)
+        booking_epc   = self.intersect_epc(optimal_epc, bookable_epc)
+        canceling_epc = self.differ_epc(booked_epc, reserved_epc)
+        return self.sort_epc(booking_epc), self.sort_epc(canceling_epc)
 
     
     # ================================================================
