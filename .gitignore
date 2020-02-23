@@ -14,3 +14,7 @@ dist/
 *.manifest
 *.spec
 *.bat
+
+# User config file
+/.vscode
+config.json
