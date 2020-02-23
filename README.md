@@ -4,7 +4,7 @@
 ![Compiler](https://img.shields.io/badge/Build-Python%203.6-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-GPL,%20v3.0-blue.svg)
 
-版本 v2.0 更新日志(2020_02_21):
+版本 v2.0 更新日志(2020_02_23):
 - 支持自动选课, 根据**课表优化算法**自动优化课表.
 - 支持**选课时段**和**EPC课程类型**的自定义筛选.
 - 支持**邮件提醒**, 课表更新时系统自动通知.
