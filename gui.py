@@ -1,11 +1,8 @@
 import os, shutil, inspect
 import json
-import time, random
 import threading
-import traceback
 from tkinter import *
 from tkinter.scrolledtext import *
-from tkinter.messagebox import showinfo
 from bot import *
 
 class GUI:
@@ -111,7 +108,7 @@ class GUI:
             width=10, command=self.start_bot)
         self.start_button.grid(row=0, column=0, padx=10)
         self.stop_button  = Button(self.buttons_frame, text="Stop", 
-            width=10, command=self.stop_bot)
+            width=10, command=self.stop_bot, state="disabled")
         self.stop_button.grid(row=0, column=1, padx=10)
 
         # 新建scrolledtext元素, 用于输出日志
@@ -198,6 +195,10 @@ class GUI:
     def start_bot(self):
         # 获取设置面板中最新配置信息, 储存到变量
         self.sync_config()
+
+        # 禁用开始按钮, 启用停止按钮
+        self.start_button.configure(state="disabled")
+        self.stop_button.configure(state="normal")
         
         # 若基本信息的输入框非空, 则写入配置文件
         if (not len(self.ustc_id)):    return
@@ -215,8 +216,10 @@ class GUI:
     # 停止EPC-BOT
     # ================================================================
     def stop_bot(self):
+        self.start_button.configure(state="normal")
+        self.stop_button.configure(state="disabled")
         self.bot.stop()
-    
+
     
     # ================================================================
     # 更新EPC-BOT日志到GUI
