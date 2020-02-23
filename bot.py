@@ -223,11 +223,28 @@ class EPCBot(threading.Thread):
 
 
     # ================================================================
-    # 优化课程安排: 当sum{hour}<=hours_max时, 使max{time}趋于最小 
+    # 删除某key值重复的EPC课程数据
+    # ================================================================ 
+    def async_epc(self, epc_list:list, key:str):
+        if len(epc_list) <= 1: return epc_list
+        value0 = epc_list[0][key]
+        for i in range(1, len(epc_list)):
+            value1 = epc_list[i][key]
+            if value1 == value0:
+                epc_list.remove(epc_list[i])
+                return self.async_epc(epc_list, key)
+        return epc_list
+
+
+    # ================================================================
+    # 优化EPC课程安排: 当sum{hour}<=hours_max时, 使max{time}趋于最小 
     # ================================================================ 
     def optimize_epc(self, booked_epc:list, bookable_epc:list): 
         # 取已预约课程和可预约课程列表的并集, 并根据上课时间和学时排序
         all_epc = self.sort_epc(self.union_epc(booked_epc, bookable_epc))
+
+        # 删除并集中上课时间重复的数据
+        all_epc = self.async_epc(all_epc, "date")
 
         # 循环检查sum{hour}<=hours_max的边界条件, 将课程填入空数组
         hours = 0
