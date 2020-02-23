@@ -27,12 +27,6 @@ class EPCBot(threading.Thread):
         {"type": "Pronunciation Practice", "url": URL_ROOT + "m_practice.asp?second_id=2007"}
     ]
     
-    # 允许预约课程总学时上限
-    booked_hours_max = 4
-
-    # 已预约课程总学时
-    booked_hours = 0
-
     # 刷新间隔(s)
     refresh = 2
 
@@ -85,15 +79,33 @@ class EPCBot(threading.Thread):
         self.print_log("Login!")
         self.print_log("")
 
+    
+    # ================================================================
+    # 获取允许预约课程的总学时上限
+    # ================================================================  
+    def get_hours_max(self):
+        # 发送请求, 失败则立刻返回
+        data = {"querytype": "all"}
+        resp = self.session.post(url=self.URL_BOOKED, data=data)
+        if (resp.status_code != 200): return 0
+
+        # 解析获取到的网页源码, 获取距离完成全部学习剩余的时长
+        html = BeautifulSoup(resp.text, "html.parser")
+        table = html.find_all("table")[2]
+        tr = table.find_all("tr")[-3]
+        hours_left = 20 - int(re.compile(r"[0-9]+").findall(tr.text)[2])
+        return hours_left if hours_left < 4 else 4
+
 
     # ================================================================
-    # 获取已预约的课程列表
+    # 获取预约未上的课程列表, 以及允许预约课程的总学时上限
     # ================================================================  
     def get_booked_epc(self):
         booked_epc = list()
         
         # 发送请求, 失败则立刻返回
-        resp = self.session.get(self.URL_BOOKED)
+        data = {"querytype": "new"}
+        resp = self.session.post(url=self.URL_BOOKED, data=data)
         if (resp.status_code != 200): 
             self.print_log("Failed to fetch booked records.")
             return booked_epc, False
@@ -341,6 +353,9 @@ class EPCBot(threading.Thread):
         # 登录
         self.is_stopped.clear()
         self.login()
+
+        # 获取允许预约的学时上限
+        self.booked_hours_max = self.get_hours_max()
 
         # 获取已预约的EPC课程记录
         booked_epc, success = self.get_booked_epc()

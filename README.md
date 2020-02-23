@@ -29,6 +29,10 @@
 - 步骤3: 在设置面板中输入自己的学号, 密码, 邮箱地址及邮箱密码, 勾选允许预约的课程类型及时段, 并点击 Start 按钮. 相关设置会保存在本地的 `config.json` 文件中, 此后每次打开都会自动填充上一次的设置. 
 - 步骤4: 当有新的课程被预约, 系统将自动发送通知.
 
+<p align="center">
+    <img src="./doc/demo.gif" height="480px"/>
+</p>
+
 ### 针对开发者
 
 - 步骤1: 将项目克隆至本地.
@@ -49,15 +53,14 @@ $ python main.py
 
 - 通过脚本抓取已选课程 Booked 与可选课程 Bookable 的数据, 分别存放在对应的列表里.
 - 取 Booked 与 Bookable 的并集, 并对所有数据排序: 上课时间对应时间戳从小到大排列, 学时从大到小排列.
-- 遍历排序后的并集中的所有数据, 取前若干个学时之和不大于上限的课程, 存放在列表 Optimal 中; 此即课程安排的**局部最优解**, 可能并非全局最优解.
+- 遍历排序后的并集中的所有数据, 删除上课时间重复的数据; 取前若干个学时之和不大于上限的课程, 存放在列表 Optimal 中, 得到课程安排**最优解**.
 - 求 Optimal 与 Booked 的交集记为 Reserved, 对应EPC课程将不作变动.
-- 求 Booked 与 Reserved 的差集记为 Canceling, 对应EPC课程**将被取消**.
-- 求 Optimal 与 Bookable 的交集记为 Booking, 对应EPC课程**将被预定**.
+- 求 Booked 与 Reserved 的差集记为 Canceling, 对应EPC课程将被**取消预约**.
+- 求 Optimal 与 Bookable 的交集记为 Booking, 对应EPC课程将被**预约**.
 
 <p align="center">
     <img src="./doc/algorithm.svg" height="320px"/>
 </p>
-
 
 ## 参考文献
 

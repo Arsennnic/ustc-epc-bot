@@ -1,5 +1,6 @@
 import os, shutil, inspect
 import json
+import time, random
 import threading
 import traceback
 from tkinter import *
@@ -116,7 +117,7 @@ class GUI:
         # 新建scrolledtext元素, 用于输出日志
         self.console = ScrolledText(self.master, width=60, padx=20, pady=10)
         self.console.grid(row=0, column=1, sticky=S+N)
-        self.print_log("EPC-BOT v1.1")
+        self.print_log("EPC-BOT v2.0")
         self.print_log("Developer: @Arsennnic")
         self.print_log("")
 
