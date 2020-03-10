@@ -12,6 +12,8 @@
 - 提供**图形化操作界面**.
 - 实现原理从 Selenium 方式转为 Requests 方式, 性能提升.
 
+> 注: 版本 v2.0 为测试版本, 由于开发者 [@Arsennnic](https://github.com/Arsennnic) 在2019年秋季学期已完成EPC课程学习, 此后便不再有选课权限, 因此只对 v2.0 版本进行了局部的分段测试. 但欢迎各位学弟学妹试用 v2.0 版本, 如有问题可在 [Issues](https://github.com/Arsennnic/ustc-epc-bot/issues) 页面提交. 也可在 [Release](https://github.com/Arsennnic/ustc-epc-bot/releases) 页面下载稳定运行的 v1.0 版本.
+
 ## 目录
 
 - [安装及使用](#安装及使用)
@@ -36,17 +38,17 @@
 ### 针对开发者
 
 - 步骤1: 将项目克隆至本地.
-```
-$ git clone https://github.com/Arsennnic/ustc-epc-bot.git
+```batch
+git clone https://github.com/Arsennnic/ustc-epc-bot.git
 ```
 - 步骤2: 安装相关依赖包.
-```
-$ cd ustc-epc-bot/
-$ pip install -r requirements.txt
+```batch
+cd ustc-epc-bot/
+pip install -r requirements.txt
 ```
 - 步骤3: 运行 `main.py` 文件.
-```
-$ python main.py
+```batch
+python main.py
 ```
 
 ## 课表优化算法
