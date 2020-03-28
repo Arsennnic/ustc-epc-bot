@@ -12,16 +12,16 @@ class EmailSender:
     def __init__(self, addr, pwd):
         self.smtp = addr.split("@")[1]
         self.addr = addr
-        self.pwd = pwd
+        self.pwd  = pwd
 
     def send(self, subject, content):
         msg = MIMEMultipart("mixed")
-        msg["Subject"] = self.subject
+        msg["Subject"] = subject
         msg["From"]    = self.addr
         msg["To"]      = self.addr
         text = MIMEText(content, "html", "utf-8")
         msg.attach(text)
-        smtp = smtplib.smtp()
+        smtp = smtplib.SMTP()
         smtp.connect(self.smtp)
         smtp.login(self.addr, self.pwd)
         smtp.sendmail(self.addr, self.addr, msg.as_string())

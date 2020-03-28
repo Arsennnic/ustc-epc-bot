@@ -12,7 +12,7 @@
 - 提供**图形化操作界面**.
 - 实现原理从 Selenium 方式转为 Requests 方式, 性能提升.
 
-> 注: 版本 v2.0 为测试版本, 由于开发者 [@Arsennnic](https://github.com/Arsennnic) 在2019年秋季学期已完成EPC课程学习, 此后便不再有选课权限, 因此只对 v2.0 版本进行了局部的分段测试. 但欢迎各位学弟学妹试用 v2.0 版本, 如有问题可在 [Issues](https://github.com/Arsennnic/ustc-epc-bot/issues) 页面提交. 也可在 [Release](https://github.com/Arsennnic/ustc-epc-bot/releases) 页面下载稳定运行的 v1.0 版本.
+> 注: 版本 v2.0 为测试版本, 由于开发者 [@Arsennnic](https://github.com/Arsennnic) 在2019年秋季学期已完成EPC课程学习, 此后便不再有选课权限, 因此只对 v2.0 版本进行了局部的分段测试. 但欢迎各位学弟学妹试用 v2.0 版本, 如有问题可在 [Issues](https://github.com/Arsennnic/ustc-epc-bot/issues) 页面提交. 也可在 [Releases](https://github.com/Arsennnic/ustc-epc-bot/releases) 页面下载稳定运行的 v1.0 版本.
 
 ## 目录
 
@@ -26,30 +26,30 @@
 
 ### 针对普通用户
 
-- 步骤1: 在 [Release](https://github.com/Arsennnic/ustc-epc-bot/releases) 页面下载最新版本.
+- 步骤1: 在 [Releases](https://github.com/Arsennnic/ustc-epc-bot/releases) 页面下载最新版本.
 - 步骤2: 解压并双击运行 `epc_bot.exe` 文件.
 - 步骤3: 在设置面板中输入自己的学号, 密码, 邮箱地址及邮箱密码, 勾选允许预约的课程类型及时段, 并点击 Start 按钮. 相关设置会保存在本地的 `config.json` 文件中, 此后每次打开都会自动填充上一次的设置. 
 - 步骤4: 当有新的课程被预约, 系统将自动发送通知.
 
 <p align="center">
-    <img src="./doc/demo.gif" height="480px"/>
+    <img src="./doc/demo.gif" width="80%"/>
 </p>
 
 ### 针对开发者
 
 - 步骤1: 将项目克隆至本地.
-```batch
-git clone https://github.com/Arsennnic/ustc-epc-bot.git
-```
+    ```batch
+    git clone https://github.com/Arsennnic/ustc-epc-bot.git
+    ```
 - 步骤2: 安装相关依赖包.
-```batch
-cd ustc-epc-bot/
-pip install -r requirements.txt
-```
+    ```batch
+    cd ustc-epc-bot/
+    pip install -r requirements.txt
+    ```
 - 步骤3: 运行 `main.py` 文件.
-```batch
-python main.py
-```
+    ```batch
+    python main.py
+    ```
 
 ## 课表优化算法
 
@@ -61,11 +61,11 @@ python main.py
 - 求 Optimal 与 Bookable 的交集记为 Booking, 对应EPC课程将被**预约**.
 
 <p align="center">
-    <img src="./doc/algorithm.svg" height="320px"/>
+    <img src="./doc/algorithm.svg" width="80%"/>
 </p>
 
 ## 参考文献
 
-[1] 木华生. 中科大EPC课程爬取[OL]. https://blog.csdn.net/qq_28491207/article/details/84261732, 2018.  
-[2] David Cortesi, William Caban. PyInstaller Manual[OL]. https://pyinstaller.readthedocs.io/.  
-[3] AhmedWas. Getting Rid of ChromeDirver Console Window with PyInstaller[OL]. https://stackoverflow.com/questions/52643556/getting-rid-of-chromedirver-console-window-with-pyinstaller, 2018.
+- 木华生. 中科大EPC课程爬取[OL]. https://blog.csdn.net/qq_28491207/article/details/84261732, 2018.  
+- David Cortesi, William Caban. PyInstaller Manual[OL]. https://pyinstaller.readthedocs.io/.  
+- AhmedWas. Getting Rid of ChromeDirver Console Window with PyInstaller[OL]. https://stackoverflow.com/questions/52643556/getting-rid-of-chromedirver-console-window-with-pyinstaller, 2018.

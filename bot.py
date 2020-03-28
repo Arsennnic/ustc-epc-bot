@@ -2,6 +2,7 @@ import time, random
 import requests
 import json
 import threading
+from queue import Queue
 from bs4 import BeautifulSoup
 from notify import *
 from gui import *
@@ -21,10 +22,10 @@ class EPCBot(threading.Thread):
         {"type": "Pronunciation Practice", "url": URL_ROOT + "m_practice.asp?second_id=2007"}
     ]
     
-    # 刷新间隔(s)
-    refresh = 2
 
-
+    # ================================================================
+    # EPC-Bot类初始化
+    # ================================================================  
     def __init__(self, config:dict, ui=None):
 
         # 设置监听
@@ -104,25 +105,29 @@ class EPCBot(threading.Thread):
             self.print_log("Failed to fetch booked records.")
             return booked_epc, False
 
-        # 解析获取到的网页源码, 获取表格中每行对应的数据
-        html = BeautifulSoup(resp.text, "html.parser")
-        table = html.find_all("table")[2]
-        tr = table.find_all("tr")
-        form = html.find_all("form")
+        try:
+            # 解析获取到的网页源码, 获取表格中每行对应的数据
+            html = BeautifulSoup(resp.text, "html.parser")
+            table = html.find_all("table")[2]
+            tr = table.find_all("tr")
+            form = html.find_all("form")
 
-        # 抓取各列中有用的信息
-        for i in range(1, len(tr)):
-            td = tr[i].find_all("td")
-            booked_epc.append({
-                "unit": td[1].get_text(separator=" "),   # 预约单元
-                "prof": td[2].get_text(separator=" "),   # 教师
-                "hour": td[3].get_text(separator=" "),   # 学时
-                "week": td[5].get_text(separator=" "),   # 教学周
-                "wday": td[6].get_text(separator=" "),   # 星期
-                "date": td[7].get_text(separator=" "),   # 上课时间
-                "room": td[8].get_text(separator=" "),   # 上课教室
-                "_url": form[i-1].get("action")          # 表单链接
-            })
+            # 抓取各列中有用的信息
+            for i in range(1, len(tr)):
+                td = tr[i].find_all("td")
+                booked_epc.append({
+                    "unit": td[1].get_text(separator=" "),   # 预约单元
+                    "prof": td[2].get_text(separator=" "),   # 教师
+                    "hour": td[3].get_text(separator=" "),   # 学时
+                    "week": td[5].get_text(separator=" "),   # 教学周
+                    "wday": td[6].get_text(separator=" "),   # 星期
+                    "date": td[7].get_text(separator=" "),   # 上课时间
+                    "room": td[8].get_text(separator=" "),   # 上课教室
+                    "_url": form[i-1].get("action"),         # 表单链接
+                    "_new": False                            # 是否为可预约课程
+                })
+        except:
+            pass
         return booked_epc, True
 
 
@@ -130,49 +135,67 @@ class EPCBot(threading.Thread):
     # 获取可预约的课程列表
     # ================================================================  
     def get_bookable_epc(self):
-        bookable_epc = list()
-        success = True
 
-        # 遍历EPC种类, 判断是否允许预约
-        for epc in self.type_filter:
-            epc_name   = epc["type"]
-            epc_enable = epc["enable"]
+        # 获取单个种类的可预约课程列表
+        def foo(epc_type:dict, queue:Queue):
+            type_name   = epc_type["type"]
+            type_enable = epc_type["enable"]
 
-            # 若不允许预约, 则结束本次循环
-            if not epc_enable: continue
-            
+            # 若不允许预约, 则返回空数组
+            if not type_enable: queue.put((list(), False))
+
             # 若允许预约, 则发送请求; 请求失败则结束本次循环
-            epc_url = next(item["url"] for item in self.URL_BOOKABLE \
-                if item["type"] == epc_name)
-            resp = self.session.get(epc_url)
+            type_url = next(item["url"] for item in self.URL_BOOKABLE \
+                if item["type"] == type_name)
+            resp = self.session.get(type_url)
             if (resp.status_code != 200): 
                 self.print_log("Failed to fetch bookable classes of %s." % epc_name)
+                queue.put((list(), False))
+
+            bookable_epc = list()
+            success = True
+            try:
+                # 解析获取到的网页源码, 获取表格中每行对应的数据
+                html = BeautifulSoup(resp.text, "html.parser")
+                table = html.find_all("table")[4]
+                tr = table.find_all("tr")
+                form = html.find_all("form")
+
+                # 抓取各列中有用的信息
+                for i in range(1, len(tr)):
+                    td = tr[i].find_all("td")
+                    bookable_epc.append({
+                        "unit": td[0].get_text(separator=" "),   # 预约单元
+                        "prof": td[3].get_text(separator=" "),   # 教师
+                        "hour": td[4].get_text(separator=" "),   # 学时
+                        "week": td[1].get_text(separator=" "),   # 教学周
+                        "wday": td[2].get_text(separator=" "),   # 星期
+                        "date": td[5].get_text(separator=" "),   # 上课时间
+                        "room": td[6].get_text(separator=" "),   # 上课教室
+                        "_url": form[i-1].get("action"),         # 表单链接
+                        "_new": True                             # 是否为可预约课程
+                    })
+            except:
                 success = False
-                continue
-
-            # 解析获取到的网页源码, 获取表格中每行对应的数据
-            html = BeautifulSoup(resp.text, "html.parser")
-            table = html.find_all("table")[4]
-            tr = table.find_all("tr")
-            form = html.find_all("form")
-
-            # 抓取各列中有用的信息
-            for i in range(1, len(tr)):
-                td = tr[i].find_all("td")
-                bookable_epc.append({
-                    "unit": td[0].get_text(separator=" "),   # 预约单元
-                    "prof": td[3].get_text(separator=" "),   # 教师
-                    "hour": td[4].get_text(separator=" "),   # 学时
-                    "week": td[1].get_text(separator=" "),   # 教学周
-                    "wday": td[2].get_text(separator=" "),   # 星期
-                    "date": td[5].get_text(separator=" "),   # 上课时间
-                    "room": td[6].get_text(separator=" "),   # 上课教室
-                    "_url": form[i-1].get("action")          # 表单链接
-                })
-        
+            queue.put((bookable_epc, success))
+            
+        # 开启多线程, 同时获取所有
+        bookable_epc = list()
+        success = True
+        queue = Queue()
+        threads = [threading.Thread(target=foo, args=(epc_type, queue)) \
+            for epc_type in self.type_filter]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        for _ in range(queue.qsize()):
+            res = queue.get()
+            bookable_epc = bookable_epc + res[0]
+            success = success or res[1]
         return bookable_epc, success
-        
-        
+
+    
     # ================================================================
     # 预约EPC课程
     # ================================================================ 
@@ -192,12 +215,12 @@ class EPCBot(threading.Thread):
 
 
     # ================================================================
-    # 根据上课时间和学时排序: 上课时间从小到大, 学时从大到小
+    # 根据上课时间和学时排序: 上课时间从小到大, 学时从大到小, 已预约的优先
     # ================================================================ 
     def sort_epc(self, epc_list:list):
         return sorted(epc_list, key=lambda epc: (
             time.mktime(time.strptime(epc["date"].split("-")[0], "%Y/%m/%d %H:%M")), 
-            -int(epc["hour"])
+            -int(epc["hour"]), int(epc["_new"])
         ))
 
 
@@ -274,12 +297,12 @@ class EPCBot(threading.Thread):
     # ================================================================ 
     def list2html(self, epc_list:list):
         # 若数组为空, 则返回空字符串
-        if len(info_lst) == 0: return ""
+        if len(epc_list) == 0: return ""
         
         # 新建表格
         html_str = "<table></table>"
         html = BeautifulSoup(html_str, "html.parser")
-        table = bs_obj.find("table")
+        table = html.find("table")
         table.attrs = {
             "cellspacing": 0,
             "cellpadding": "4px",
@@ -288,8 +311,9 @@ class EPCBot(threading.Thread):
 
         # 新建表头
         tr = html.new_tag("tr")
-        keys = epc_list[0].keys()
+        keys = list(epc_list[0].keys())
         keys.remove("_url")
+        keys.remove("_new")
         for key in keys:
             th = html.new_tag("th")
             th.string = key.upper()
@@ -306,7 +330,7 @@ class EPCBot(threading.Thread):
                 tr.append(td)
             table.append(tr)
         
-        return bs_obj.prettify()
+        return html.prettify()
 
 
     # ================================================================
@@ -348,43 +372,43 @@ class EPCBot(threading.Thread):
         self.is_stopped.clear()
         self.login()
 
-        # 获取允许预约的学时上限
-        self.booked_hours_max = self.get_hours_max()
-
-        # 获取已预约的EPC课程记录
-        booked_epc, success = self.get_booked_epc()
-        self.print_log(time.localtime(time.time()))
-        if success:
-            self.print_log("Your latest schedule:")
-            self.print_log(booked_epc)
-            self.print_log("")
-        else:
-            self.print_log("Failed to fetch your latest schedule.")
-            self.print_log("Check the network and your basic settings.\n")
-            self.is_stopped.set()
-            
         while not self.is_stopped.is_set():
+
+            # 输出当前时间
+            self.print_log(time.localtime(time.time()))
+
+            # 获取允许预约的学时上限
+            self.booked_hours_max = self.get_hours_max()
+
+            # 获取已预约的EPC课程记录
+            booked_epc, success = self.get_booked_epc()
+            if success:
+                self.print_log("Your latest schedule:")
+                self.print_log(booked_epc)
+            else:
+                self.print_log("Failed to fetch your latest schedule.")
+                self.print_log("Check the network and your basic settings.\n")
+                continue
 
             # 获取可预约的EPC课程列表
             bookable_epc, success = self.get_bookable_epc()
             if not success:
-                self.print_log(time.localtime(time.time()))
                 self.print_log("Failed to fetch latest bookable classes.\n")
                 continue
 
             # 优化EPC课程列表
             optimal_epc, booking_epc, canceling_epc = self.optimize_epc(booked_epc, bookable_epc)
-            
-            # 若课表无需优化, 则加入最大为1s的随机延迟并进行下一轮循环
-            if len(booking_epc) == 0: 
-                time.sleep(self.refresh + random.random())
-                continue
-
-            # 优化过程, 失败则进行下一轮循环
-            self.print_log(time.localtime(time.time()))
-            self.print_log("Trying to optimize your schedule...")
             self.print_log("Optimal schedule:")
             self.print_log(optimal_epc)
+            self.print_log("EPC classes to be cancelled:")
+            self.print_log(canceling_epc)
+            self.print_log("EPC classes to be booked:")
+            self.print_log(booking_epc)
+
+            # 优化过程, 失败则进行下一轮循环
+            if len(booking_epc) == 0: 
+                self.print_log("")
+                continue
             success = True
             for epc in canceling_epc:
                 success = self.cancel_epc(epc) and success
