@@ -1,3 +1,4 @@
 requests==2.20.0
-beautifulsoup4==4.8.2
+goto-statement==1.2
+beautifulsoup4==4.6.3
 win10toast==0.9

@@ -3,6 +3,7 @@ import requests
 import json
 import threading
 from queue import Queue
+from goto import with_goto
 from bs4 import BeautifulSoup
 from notify import *
 from gui import *
@@ -93,7 +94,7 @@ class EPCBot(threading.Thread):
 
 
     # ================================================================
-    # 获取预约未上的课程列表, 以及允许预约课程的总学时上限
+    # 获取预约未上的课程列表
     # ================================================================  
     def get_booked_epc(self):
         booked_epc = list()
@@ -135,9 +136,10 @@ class EPCBot(threading.Thread):
     # 获取可预约的课程列表
     # ================================================================  
     def get_bookable_epc(self):
+        queue = Queue()
 
         # 获取单个种类的可预约课程列表
-        def foo(epc_type:dict, queue:Queue):
+        def foo(epc_type:dict):
             type_name   = epc_type["type"]
             type_enable = epc_type["enable"]
 
@@ -179,17 +181,16 @@ class EPCBot(threading.Thread):
                 success = False
             queue.put((bookable_epc, success))
             
-        # 开启多线程, 同时获取所有
+        # 开启多线程, 同时获取所有种类的EPC可预约列表
         bookable_epc = list()
         success = True
-        queue = Queue()
-        threads = [threading.Thread(target=foo, args=(epc_type, queue)) \
+        threads = [threading.Thread(target=foo, args=(epc_type, )) \
             for epc_type in self.type_filter]
         for thread in threads:
             thread.start()
         for thread in threads:
             thread.join()
-        for _ in range(queue.qsize()):
+        while not queue.empty():
             res = queue.get()
             bookable_epc = bookable_epc + res[0]
             success = success or res[1]
@@ -252,40 +253,23 @@ class EPCBot(threading.Thread):
 
 
     # ================================================================
-    # 删除某key值重复的EPC课程数据
-    # ================================================================ 
-    def async_epc(self, epc_list:list, key:str):
-        if len(epc_list) <= 1: return epc_list
-        value0 = epc_list[0][key]
-        for i in range(1, len(epc_list)):
-            value1 = epc_list[i][key]
-            if value1 == value0:
-                epc_list.remove(epc_list[i])
-                return self.async_epc(epc_list, key)
-        return epc_list
-
-
-    # ================================================================
     # 优化EPC课程安排: 当sum{hour}<=hours_max时, 使max{time}趋于最小 
     # ================================================================ 
     def optimize_epc(self, booked_epc:list, bookable_epc:list): 
-        # 取已预约课程和可预约课程列表的并集, 并根据上课时间和学时排序
+        # 取已预约课程和可预约课程列表的并集并排序
         all_epc = self.sort_epc(self.union_epc(booked_epc, bookable_epc))
-
-        # 删除并集中上课时间重复的数据
-        all_epc = self.async_epc(all_epc, "date")
 
         # 循环检查sum{hour}<=hours_max的边界条件, 将课程填入空数组
         hours = 0
         optimal_epc = list()
         for epc in all_epc:
-            if hours >= self.booked_hours_max: break
+            if hours == self.booked_hours_max: break
             hours_tmp = hours + int(epc["hour"])
             if hours_tmp > self.booked_hours_max: continue
             hours = hours_tmp
             optimal_epc.append(epc)
             
-        # 确定应该保留/预约/取消预约的课程列表
+        # 计算待预约/待取消的课程列表
         reserved_epc  = self.intersect_epc(optimal_epc, booked_epc)
         booking_epc   = self.intersect_epc(optimal_epc, bookable_epc)
         canceling_epc = self.differ_epc(booked_epc, reserved_epc)
@@ -364,6 +348,7 @@ class EPCBot(threading.Thread):
     # ================================================================
     # 启动EPC-BOT
     # ================================================================
+    @with_goto
     def run(self):
         self.print_log(time.localtime(time.time()))
         self.print_log("EPC-Bot is running...\n")
@@ -372,75 +357,89 @@ class EPCBot(threading.Thread):
         self.is_stopped.clear()
         self.login()
 
-        while not self.is_stopped.is_set():
+        # 开启新的循环
+        label .new_loop
+        self.print_log(time.localtime(time.time()))
 
-            # 输出当前时间
+        # 获取允许预约的学时上限及已预约的EPC课程记录
+        self.booked_hours_max = self.get_hours_max()
+        booked_epc, success = self.get_booked_epc()
+        if success:
+            self.print_log("Your latest schedule:")
+            self.print_log(booked_epc)
+            self.print_log("")
+        else:
+            self.print_log("Failed to fetch your latest schedule.")
+            self.print_log("Check the network and your basic settings.\n")
+            goto .new_loop
+
+        # 判断是否停止循环
+        label .check_loop
+        if not self.is_stopped.is_set(): 
             self.print_log(time.localtime(time.time()))
+        else:
+            goto .end_loop
 
-            # 获取允许预约的学时上限
-            self.booked_hours_max = self.get_hours_max()
+        # 获取可预约的EPC课程列表
+        bookable_epc, success = self.get_bookable_epc()
+        if not success:
+            self.print_log("Failed to fetch latest bookable classes.\n")
+            goto .check_loop
 
-            # 获取已预约的EPC课程记录
-            booked_epc, success = self.get_booked_epc()
-            if success:
-                self.print_log("Your latest schedule:")
-                self.print_log(booked_epc)
+        # 计算最优EPC课程列表
+        optimal_epc, booking_epc, canceling_epc = self.optimize_epc(booked_epc, bookable_epc)
+        self.print_log("Optimal schedule:")
+        self.print_log(optimal_epc)
+        self.print_log("EPC classes to be cancelled:")
+        self.print_log(canceling_epc)
+        self.print_log("EPC classes to be booked:")
+        self.print_log(booking_epc)
+
+        # 判断当前EPC课表是否需要更新
+        if len(booking_epc) == 0: 
+            self.print_log("")
+            goto .check_loop
+
+        # 取消对应EPC课表
+        success = True
+        for epc in canceling_epc:
+            success = self.cancel_epc(epc) and success
+            if success: 
+                self.print_log("Succeed to cancel <%s>." % epc["unit"])
             else:
-                self.print_log("Failed to fetch your latest schedule.")
-                self.print_log("Check the network and your basic settings.\n")
-                continue
-
-            # 获取可预约的EPC课程列表
-            bookable_epc, success = self.get_bookable_epc()
-            if not success:
-                self.print_log("Failed to fetch latest bookable classes.\n")
-                continue
-
-            # 优化EPC课程列表
-            optimal_epc, booking_epc, canceling_epc = self.optimize_epc(booked_epc, bookable_epc)
-            self.print_log("Optimal schedule:")
-            self.print_log(optimal_epc)
-            self.print_log("EPC classes to be cancelled:")
-            self.print_log(canceling_epc)
-            self.print_log("EPC classes to be booked:")
-            self.print_log(booking_epc)
-
-            # 优化过程, 失败则进行下一轮循环
-            if len(booking_epc) == 0: 
-                self.print_log("")
-                continue
-            success = True
-            for epc in canceling_epc:
-                success = self.cancel_epc(epc) and success
-                if success: 
-                    self.print_log("Succeed to cancel <%s>." % epc["unit"])
-                else:
-                    self.print_log("Failed to cancel <%s>.\n" % epc["unit"])
-                    break
-            if not success: continue
-            for epc in booking_epc:
-                success = self.book_epc(epc) and success
-                if success: 
-                    self.print_log("Succeed to book <%s>." % epc["unit"])
-                else:
-                    self.print_log("Failed to book <%s>.\n" % epc["unit"])
-                    break
-            if not success: continue
-
-            # 优化成功, 打印日志, 发送通知
-            booked_epc, success = self.get_booked_epc()
-            if success:
-                self.print_log("Your latest schedule:")
-                self.print_log(booked_epc)
-                self.print_log("")
-                subject = "EPC Schedule Updated"
-                brief   = "EPC-Bot has optimized your schedule. Check your mailbox for more infomation."
-                detail  = self.list2html(booked_epc)
-                self.desktop_toaster.toast(subject, brief)
-                self.email_sender.send(subject, detail)
+                self.print_log("Failed to cancel <%s>.\n" % epc["unit"])
+                break
+        if not success: 
+            goto .new_loop
+            
+        # 预约对应EPC课表
+        for epc in booking_epc:
+            success = self.book_epc(epc) and success
+            if success: 
+                self.print_log("Succeed to book <%s>." % epc["unit"])
             else:
-                self.print_log("Failed to fetch your latest schedule.\n")
+                self.print_log("Failed to book <%s>.\n" % epc["unit"])
+                break
+        if not success: 
+            goto .new_loop
 
+        # 优化成功, 打印日志, 发送通知
+        label .send_msg
+        booked_epc, success = self.get_booked_epc()
+        if success:
+            self.print_log("Your latest schedule:")
+            self.print_log(booked_epc)
+            self.print_log("")
+            subject = "EPC Schedule Updated"
+            brief   = "EPC-Bot has optimized your schedule. Check your mailbox for more infomation."
+            detail  = self.list2html(booked_epc)
+            self.desktop_toaster.toast(subject, brief)
+            self.email_sender.send(subject, detail)
+            goto .check_loop
+        else:
+            goto .send_msg
+
+        label .end_loop
         self.print_log(time.localtime(time.time()))
         self.print_log("EPC-Bot is stopped.\n")
 
