@@ -4,22 +4,21 @@
 ![Compiler](https://img.shields.io/badge/Build-Python%203.6-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-GPL,%20v3.0-blue.svg)
 
-版本 v2.0 更新日志(2020_02_23):
+版本 v2.1 更新日志(2020_03_30):
 - 支持自动选课, 根据**课表优化算法**自动优化课表.
-- 支持**选课时段**和**EPC课程类型**的自定义筛选.
+- 支持**课程时间**和**课程类型**的自定义筛选.
 - 支持**邮件提醒**, 课表更新时系统自动通知.
 - 支持 Windows 10 系统的**桌面提醒**, 课表更新时系统自动通知.
 - 提供**图形化操作界面**.
-- 实现原理从 Selenium 方式转为 Requests 方式, 性能提升.
-
-> 注: 版本 v2.0 为测试版本, 由于开发者 [@Arsennnic](https://github.com/Arsennnic) 在2019年秋季学期已完成EPC课程学习, 此后便不再有选课权限, 因此只对 v2.0 版本进行了局部的分段测试. 但欢迎各位学弟学妹试用 v2.0 版本, 如有问题可在 [Issues](https://github.com/Arsennnic/ustc-epc-bot/issues) 页面提交. 也可在 [Releases](https://github.com/Arsennnic/ustc-epc-bot/releases) 页面下载稳定运行的 v1.0 版本.
+- 实现原理从 Selenium 方式转为 Requests 方式, 并采用**多线程**, 效率提升.
 
 ## 目录
 
 - [安装及使用](#安装及使用)
     + [针对普通用户](#针对普通用户)
-    + [针对开发者](#针对开发者)
+    + [针对 Python 程序员](#针对-python-程序员)
 - [课表优化算法](#课表优化算法)
+- [开发及测试人员](#开发及测试人员)
 - [参考文献](#参考文献)
 
 ## 安装及使用
@@ -32,10 +31,10 @@
 - 步骤4: 当有新的课程被预约, 系统将自动发送通知.
 
 <p align="center">
-    <img src="./doc/demo.gif" width="80%"/>
+    <img src="./doc/demo.gif" width="100%"/>
 </p>
 
-### 针对开发者
+### 针对 Python 程序员
 
 - 步骤1: 将项目克隆至本地.
     ```batch
@@ -53,19 +52,31 @@
 
 ## 课表优化算法
 
-- 通过脚本抓取已选课程 Booked 与可选课程 Bookable 的数据, 分别存放在对应的列表里.
-- 取 Booked 与 Bookable 的并集, 并对所有数据排序: 上课时间对应时间戳从小到大排列, 学时从大到小排列.
-- 遍历排序后的并集中的所有数据, 删除上课时间重复的数据; 取前若干个学时之和不大于上限的课程, 存放在列表 Optimal 中, 得到课程安排**最优解**.
-- 求 Optimal 与 Booked 的交集记为 Reserved, 对应EPC课程将不作变动.
-- 求 Booked 与 Reserved 的差集记为 Canceling, 对应EPC课程将被**取消预约**.
-- 求 Optimal 与 Bookable 的交集记为 Booking, 对应EPC课程将被**预约**.
+- 通过脚本抓取已选课程 Booked 与可选课程 Bookable 的数据.
+- 取 Booked 与 Bookable 的并集 All, 并对其排序: 上课时间对应时间戳从小到大排列, 学时从大到小排列, 已预约优先于未预约.
+- 遍历排序后的 All 中的所有数据: 若课程单元或课程时间重复, 则跳过; 否则将该课程添加到 Optimal 中, 直至 Optimal 中课程学时总和达到上限, 从而得到课程安排**最优解**.
+- 求 Optimal 与 Booked 的交集记为 Reserved, 对应课程将不作变动.
+- 求 Booked 与 Reserved 的差集记为 Canceling, 对应课程**将被取消**.
+- 求 Optimal 与 Bookable 的交集记为 Booking, 对应课程**将被预约**.
 
 <p align="center">
-    <img src="./doc/algorithm.svg" width="80%"/>
+    <img src="./doc/flow.svg" width="100%"/>
 </p>
+
+## 开发及测试人员
+
+<span>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://github.com/Arsennnic">
+    <img src="https://avatars.githubusercontent.com/arsennnic" width="72px" title="开发者: @Arsennnic" />
+</a>
+<a href="https://github.com/hooooooot">
+    <img src="https://avatars.githubusercontent.com/hooooooot" width="72px" title="测试者: @hooooooot" />
+</a>
+</span>
 
 ## 参考文献
 
 - 木华生. 中科大EPC课程爬取[OL]. https://blog.csdn.net/qq_28491207/article/details/84261732, 2018.  
+- John W. Shipman. Tkinter reference: a GUI for Python[J]. New Mexico Tech Computer Center, 2001.  
 - David Cortesi, William Caban. PyInstaller Manual[OL]. https://pyinstaller.readthedocs.io/.  
-- AhmedWas. Getting Rid of ChromeDirver Console Window with PyInstaller[OL]. https://stackoverflow.com/questions/52643556/getting-rid-of-chromedirver-console-window-with-pyinstaller, 2018.

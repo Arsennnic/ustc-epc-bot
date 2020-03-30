@@ -10,6 +10,9 @@ class GUI:
     # EPC-BOT对象
     bot = None
 
+    # 版本号
+    version = "v2.1"
+
     def __init__(self, master):
         # 设置工作目录, 读取配置文件
         self.work_dir = os.path.realpath(os.path.abspath(
@@ -19,9 +22,9 @@ class GUI:
 
         # 新建master窗口
         self.master = master
-        self.master.title("EPC-BOT for USTC")
+        self.master.title("EPC-Bot")
         self.master.resizable(False, False)
-        self.master.protocol('WM_DELETE_WINDOW', self.on_gui_destroy)
+        self.master.protocol("WM_DELETE_WINDOW", self.on_gui_destroy)
 
         # 新建frame布局, 用于设置参数
         self.settings_frame = Frame(self.master)
@@ -114,9 +117,9 @@ class GUI:
         # 新建scrolledtext元素, 用于输出日志
         self.console = ScrolledText(self.master, width=60, padx=20, pady=10)
         self.console.grid(row=0, column=1, sticky=S+N)
-        self.print_log("EPC-BOT v2.0")
+        self.print_log("EPC-Bot for USTC")
         self.print_log("Developer: @Arsennnic")
-        self.print_log("")
+        self.print_log("Version:   %s\n" % self.version)
 
         # 应用配置文件中的设置
         self.apply_config()
@@ -196,16 +199,16 @@ class GUI:
         # 获取设置面板中最新配置信息, 储存到变量
         self.sync_config()
 
-        # 禁用开始按钮, 启用停止按钮
-        self.start_button.configure(state="disabled")
-        self.stop_button.configure(state="normal")
-        
         # 若基本信息的输入框非空, 则写入配置文件
         if (not len(self.ustc_id)):    return
         if (not len(self.ustc_pwd)):   return
         if (not len(self.email_addr)): return
         if (not len(self.email_pwd)):  return
         config = self.write_config()
+
+        # 禁用控制面板及开始按钮, 启用停止按钮
+        self.config_widgets(self.settings_frame, state="disabled")
+        self.stop_button.configure(state="normal")
         
         # 启动bot
         self.bot = EPCBot(config, ui=self)
@@ -216,9 +219,21 @@ class GUI:
     # 停止EPC-BOT
     # ================================================================
     def stop_bot(self):
-        self.start_button.configure(state="normal")
-        self.stop_button.configure(state="disabled")
         self.bot.stop()
+        self.config_widgets(self.settings_frame, state="normal")
+        self.stop_button.configure(state="disabled")
+
+    
+    # ================================================================
+    # 启用或禁用控件
+    # ================================================================
+    def config_widgets(self, root:Frame, state:str):
+        for child in root.winfo_children():
+            try:
+                child.configure(state=state)
+            except:
+                pass
+            self.config_widgets(child, state)
 
     
     # ================================================================
