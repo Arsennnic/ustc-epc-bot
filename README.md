@@ -65,15 +65,15 @@
 
 ## 开发及测试人员
 
-<span>
-&nbsp;&nbsp;&nbsp;&nbsp;
+<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
 <a href="https://github.com/Arsennnic">
-    <img src="https://avatars.githubusercontent.com/arsennnic" width="72px" title="开发者: @Arsennnic" />
+    <img src="https://avatars.githubusercontent.com/arsennnic" width="64px" title="开发者: @Arsennnic" />
 </a>
+<span>&nbsp;&nbsp;</span>
 <a href="https://github.com/hooooooot">
-    <img src="https://avatars.githubusercontent.com/hooooooot" width="72px" title="测试者: @hooooooot" />
+    <img src="https://avatars.githubusercontent.com/hooooooot" width="64px" title="测试者: @hooooooot" />
 </a>
-</span>
+
 
 ## 参考文献
 
