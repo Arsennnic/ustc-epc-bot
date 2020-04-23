@@ -53,11 +53,18 @@
 ## 课表优化算法
 
 - 通过脚本抓取已选课程 Booked 与可选课程 Bookable 的数据.
-- 取 Booked 与 Bookable 的并集 All, 并对其排序: 上课时间对应时间戳从小到大排列, 学时从大到小排列, 已预约优先于未预约.
-- 遍历排序后的 All 中的所有数据: 若课程单元或课程时间重复, 则跳过; 否则将该课程添加到 Optimal 中, 直至 Optimal 中课程学时总和达到上限, 从而得到课程安排**最优解**.
-- 求 Optimal 与 Booked 的交集记为 Reserved, 对应课程将不作变动.
-- 求 Booked 与 Reserved 的差集记为 Canceling, 对应课程**将被取消**.
-- 求 Optimal 与 Bookable 的交集记为 Booking, 对应课程**将被预约**.
+- 取 Booked 与 Bookable 的并集 All, 并对其排序: 
+  - 上课时间: 先→后;
+  - 课程学时: 大→小;
+  - 是否已经预约: 是→否.
+- 遍历排序后的 All 中的所有数据: 
+  - 若课程单元或课程时间与 Optimal 中已有的数据重复, 跳过; 
+  - 否则, 将该课程添加到 Optimal 中, 直至 Optimal 中课程学时总和达到上限
+- 计算课程安排**最优解**:
+  - 求 Optimal 与 Booked 的交集记为 Reserved, 对应课程将不作变动;
+  - 求 Booked 与 Reserved 的差集记为 Canceling, 对应课程将被**取消**;
+  - 求 Optimal 与 Bookable 的交集记为 Booking, 对应课程将被**预约**.
+- 根据最优解取消/预约相应课程. 
 
 <p align="center">
     <img src="./doc/flow.svg" width="100%"/>
